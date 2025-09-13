@@ -5,7 +5,7 @@ set -e
 NGINX_LOG_PIPE=/tmp/nginx.log.pipe
 RAGEMP_LOG_PIPE=/tmp/ragemp.log.pipe
 
-# Create FIFOs only if they don't exist
+# Create FIFOs if they don't exist
 [ ! -p $NGINX_LOG_PIPE ] && mkfifo $NGINX_LOG_PIPE
 [ ! -p $RAGEMP_LOG_PIPE ] && mkfifo $RAGEMP_LOG_PIPE
 
@@ -16,19 +16,20 @@ GREEN="\033[32m"   # info messages
 RED="\033[31m"     # crash/restart
 RESET="\033[0m"
 
-# Colorize function
+# Function to colorize and timestamp logs
 colorize() {
     local service="$1"
     while IFS= read -r line; do
+        TIMESTAMP=$(date "+%Y/%m/%d %H:%M:%S")
         if [[ "$line" =~ [Ss]tarting|[Ii]nfo|[Ll]oaded ]]; then
-            echo -e "${GREEN}[${service}]${RESET} $line"
+            echo -e "${GREEN}[${service}] $TIMESTAMP${RESET} $line"
         elif [[ "$line" =~ [Cc]rash|[Ff]ail|[Rr]estart ]]; then
-            echo -e "${RED}[${service}]${RESET} $line"
+            echo -e "${RED}[${service}] $TIMESTAMP${RESET} $line"
         else
             if [[ "$service" == "NGINX" ]]; then
-                echo -e "${BLUE}[${service}]${RESET} $line"
+                echo -e "${BLUE}[${service}] $TIMESTAMP${RESET} $line"
             else
-                echo -e "${YELLOW}[${service}]${RESET} $line"
+                echo -e "${YELLOW}[${service}] $TIMESTAMP${RESET} $line"
             fi
         fi
     done
@@ -42,12 +43,11 @@ tail -f $RAGEMP_LOG_PIPE | colorize "RAGEMP" &
 run_nginx() {
     while true; do
         echo "Starting Nginx..." > $NGINX_LOG_PIPE
-        # Start nginx and redirect logs to the pipe
-        nginx -g "daemon off;" \
-            -c /etc/nginx/nginx.conf \
-            -p / \
-            > >(while IFS= read -r line; do echo "$line" > $NGINX_LOG_PIPE; done) \
-            2> >(while IFS= read -r line; do echo "$line" > $NGINX_LOG_PIPE; done)
+        # Link logs to FIFO
+        ln -sf /tmp/nginx-error.log $NGINX_LOG_PIPE
+        ln -sf /tmp/nginx-access.log $NGINX_LOG_PIPE
+        # Run nginx in foreground
+        nginx -g "daemon off;" -c /etc/nginx/nginx.conf
         echo "Nginx crashed! Restarting in 2s..." > $NGINX_LOG_PIPE
         sleep 2
     done
@@ -57,14 +57,13 @@ run_nginx() {
 run_ragemp() {
     while true; do
         echo "Starting RageMP..." > $RAGEMP_LOG_PIPE
-        # Change into the extracted server folder first
         cd /ragemp/ragemp-srv
-        # Generate conf.json inside ragemp-srv
+        # Generate conf.json
         stdbuf -oL -eL /ragemp/config-generator.pl > ./conf.json
         if [[ ! -s ./conf.json ]]; then
             echo "RageMP: conf.json is empty, check config-generator.pl" > $RAGEMP_LOG_PIPE
         fi
-        # Run ragemp-server in background with log redirection
+        # Run ragemp-server in foreground with log redirection
         stdbuf -oL -eL ./ragemp-server \
             > >(while IFS= read -r line; do echo "$line" > $RAGEMP_LOG_PIPE; done) \
             2>&1 &
@@ -79,5 +78,4 @@ run_ragemp() {
 run_nginx &
 run_ragemp &
 
-# Wait forever
 wait

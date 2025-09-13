@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libjson-perl \
     liblocal-lib-perl \
     perl \
+    tar \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory for RageMP
@@ -28,11 +29,9 @@ RUN wget https://cdn.rage.mp/updater/prerelease/server-files/linux_x64.tar.gz &&
     tar -xvf linux_x64.tar.gz && \
     rm linux_x64.tar.gz
 
-WORKDIR /ragemp/ragemp-srv
-
 # Copy scripts
-COPY start.sh /ragemp/ragemp-srv/
-COPY ../config-generator.pl /ragemp/  # adjust path if needed
+COPY start.sh ./ragemp-srv/
+COPY config-generator.pl ./
 
 # Make start.sh executable
 RUN chmod +x /ragemp/ragemp-srv/start.sh

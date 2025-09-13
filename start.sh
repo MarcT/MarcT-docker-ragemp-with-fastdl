@@ -50,8 +50,9 @@ run_ragemp() {
     while true; do
         echo "Starting RageMP..." > $RAGEMP_LOG_PIPE
         # Run config-generator.pl and ragemp-server line-buffered
-        stdbuf -oL -eL ../config-generator.pl > ./conf.json
-        stdbuf -oL -eL ./ragemp-server > $RAGEMP_LOG_PIPE 2>&1
+        stdbuf -oL -eL /ragemp/config-generator.pl > /ragemp/conf.json
+        # Adjust path to ragemp-server inside extracted folder
+        stdbuf -oL -eL /ragemp/ragemp-srv/ragemp-server > $RAGEMP_LOG_PIPE 2>&1
         echo "RageMP crashed! Restarting in 2s..." > $RAGEMP_LOG_PIPE
         sleep 2
     done

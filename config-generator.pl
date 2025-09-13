@@ -7,6 +7,7 @@ use JSON;
 use Scalar::Util qw(looks_like_number);
 
 my $config = {};
+
 foreach (sort keys %ENV) {
     my $env = $_;
     if ($env =~ m/^RAGE_/g) {
@@ -14,14 +15,19 @@ foreach (sort keys %ENV) {
         $env =~ s/^RAGE_(.*)/$1/gm;
         $env =~ s/_/-/gm;
 
-        if (looks_like_number($value) == 1) {
+        # Detect true/false (case-insensitive) and numbers
+        if ($value =~ /^(true|false)$/i) {
+            $config->{lc($env)} = lc($value) eq 'true' ? JSON::true : JSON::false;
+        }
+        elsif (looks_like_number($value)) {
             $config->{lc($env)} = $value + 0;
-        } else {
+        }
+        else {
             $config->{lc($env)} = $value;
         }
-        
     }
 }
+
 my $conf = JSON->new->pretty->encode($config);
 print ($conf);
 1;

@@ -1,4 +1,3 @@
-# ---- Stage: Debian base with Nginx and RageMP ----
 FROM debian:bookworm-slim
 
 # Expose ports
@@ -22,7 +21,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Set up RageMP
 WORKDIR /ragemp
-
 RUN wget https://cdn.rage.mp/updater/prerelease/server-files/linux_x64.tar.gz && \
     tar -xvf linux_x64.tar.gz && \
     rm linux_x64.tar.gz
@@ -32,6 +30,7 @@ WORKDIR /ragemp/ragemp-srv
 # Add scripts
 COPY start_server.sh /ragemp/ragemp-srv/
 COPY config-generator.pl /ragemp/
+COPY start.sh /ragemp/
 
-# Start Nginx in the background and run RageMP server
-CMD service nginx start && ./start_server.sh
+# Set entrypoint to the new start script
+CMD ["bash", "/ragemp/start.sh"]

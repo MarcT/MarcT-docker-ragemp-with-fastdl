@@ -39,7 +39,12 @@ tail -f $RAGEMP_LOG_PIPE | colorize "RAGEMP" &
 run_nginx() {
     while true; do
         echo "Starting Nginx..." > $NGINX_LOG_PIPE
-        nginx -g 'daemon off;' > $NGINX_LOG_PIPE 2>&1
+        # Start nginx and redirect logs to the pipe
+        nginx -g "daemon off;" \
+            -c /etc/nginx/nginx.conf \
+            -p / \
+            > >(while IFS= read -r line; do echo "$line" > $NGINX_LOG_PIPE; done) \
+            2> >(while IFS= read -r line; do echo "$line" > $NGINX_LOG_PIPE; done)
         echo "Nginx crashed! Restarting in 2s..." > $NGINX_LOG_PIPE
         sleep 2
     done
@@ -56,14 +61,18 @@ run_ragemp() {
         if [[ ! -s ./conf.json ]]; then
             echo "RageMP: conf.json is empty, check config-generator.pl" > $RAGEMP_LOG_PIPE
         fi
-        # Run ragemp-server
-        stdbuf -oL -eL ./ragemp-server > $RAGEMP_LOG_PIPE 2>&1
+        # Run ragemp-server with log redirection
+        stdbuf -oL -eL ./ragemp-server \
+            > >(while IFS= read -r line; do echo "$line" > $RAGEMP_LOG_PIPE; done) \
+            2>&1 &
+        RAGEMP_PID=$!
+        wait $RAGEMP_PID
         echo "RageMP crashed! Restarting in 2s..." > $RAGEMP_LOG_PIPE
         sleep 2
     done
 }
 
-# Start both processes
+# Start both services
 run_nginx &
 run_ragemp &
 

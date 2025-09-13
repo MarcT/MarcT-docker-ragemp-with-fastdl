@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Named pipes
+# Named pipes for log forwarding
 NGINX_LOG_PIPE=/tmp/nginx.log.pipe
 RAGEMP_LOG_PIPE=/tmp/ragemp.log.pipe
 mkfifo $NGINX_LOG_PIPE $RAGEMP_LOG_PIPE
@@ -49,11 +49,14 @@ run_nginx() {
 run_ragemp() {
     while true; do
         echo "Starting RageMP..." > $RAGEMP_LOG_PIPE
-        # Run config-generator.pl and ragemp-server line-buffered
-        stdbuf -oL -eL /ragemp/config-generator.pl > /ragemp/conf.json
-        # Change into the folder where ragemp-server is extracted
+        # Change into the extracted server folder first
         cd /ragemp/ragemp-srv
-        # Run ragemp-server from the correct working directory
+        # Generate conf.json inside ragemp-srv
+        stdbuf -oL -eL /ragemp/config-generator.pl > ./conf.json
+        if [[ ! -s ./conf.json ]]; then
+            echo "RageMP: conf.json is empty, check config-generator.pl" > $RAGEMP_LOG_PIPE
+        fi
+        # Run ragemp-server
         stdbuf -oL -eL ./ragemp-server > $RAGEMP_LOG_PIPE 2>&1
         echo "RageMP crashed! Restarting in 2s..." > $RAGEMP_LOG_PIPE
         sleep 2

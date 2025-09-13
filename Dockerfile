@@ -33,8 +33,11 @@ RUN wget https://cdn.rage.mp/updater/prerelease/server-files/linux_x64.tar.gz &&
 COPY start.sh ./ragemp-srv/
 COPY config-generator.pl ./
 
-# Make start.sh executable
-RUN chmod +x /ragemp/ragemp-srv/start.sh
+# Make scripts executable
+RUN chmod +x /ragemp/config-generator.pl /ragemp/ragemp-srv/start.sh
 
-# Start both Nginx and RageMP with colored logging & restart
-CMD ["bash", "/ragemp/ragemp-srv/start.sh"]
+# Set working directory to ragemp-srv when starting container
+WORKDIR /ragemp/ragemp-srv
+
+# Start both Nginx and RageMP with log colorization & restart
+CMD ["bash", "./start.sh"]

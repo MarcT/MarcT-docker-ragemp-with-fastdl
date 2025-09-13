@@ -4,7 +4,10 @@ set -e
 # Named pipes for log forwarding
 NGINX_LOG_PIPE=/tmp/nginx.log.pipe
 RAGEMP_LOG_PIPE=/tmp/ragemp.log.pipe
-mkfifo $NGINX_LOG_PIPE $RAGEMP_LOG_PIPE
+
+# Create FIFOs only if they don't exist
+[ ! -p $NGINX_LOG_PIPE ] && mkfifo $NGINX_LOG_PIPE
+[ ! -p $RAGEMP_LOG_PIPE ] && mkfifo $RAGEMP_LOG_PIPE
 
 # ANSI colors
 BLUE="\033[34m"    # NGINX normal

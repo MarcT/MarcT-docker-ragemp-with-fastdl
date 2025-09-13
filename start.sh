@@ -31,7 +31,7 @@ colorize() {
     done
 }
 
-# Forward logs
+# Forward logs to colorizer
 tail -f $NGINX_LOG_PIPE | colorize "NGINX" &
 tail -f $RAGEMP_LOG_PIPE | colorize "RAGEMP" &
 
@@ -61,7 +61,7 @@ run_ragemp() {
         if [[ ! -s ./conf.json ]]; then
             echo "RageMP: conf.json is empty, check config-generator.pl" > $RAGEMP_LOG_PIPE
         fi
-        # Run ragemp-server with log redirection
+        # Run ragemp-server in background with log redirection
         stdbuf -oL -eL ./ragemp-server \
             > >(while IFS= read -r line; do echo "$line" > $RAGEMP_LOG_PIPE; done) \
             2>&1 &

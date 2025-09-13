@@ -1,7 +1,7 @@
 # ---- Base image ----
 FROM debian:bookworm-slim
 
-# Expose necessary ports
+# Expose ports for Nginx and RageMP
 EXPOSE 80
 EXPOSE 20005
 EXPOSE 22005/udp
@@ -20,6 +20,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     perl \
     tar \
     && rm -rf /var/lib/apt/lists/*
+
+# Fix Nginx module paths for Debian
+RUN sed -i 's|/modules/ndk_http_module.so|/usr/lib/nginx/modules/ndk_http_module.so|' /etc/nginx/modules-enabled/*.conf \
+ && sed -i 's|/modules/ngx_http_geoip_module.so|/usr/lib/nginx/modules/ngx_http_geoip_module.so|' /etc/nginx/modules-enabled/*.conf \
+ && sed -i 's|/modules/ngx_http_xslt_filter_module.so|/usr/lib/nginx/modules/ngx_http_xslt_filter_module.so|' /etc/nginx/modules-enabled/*.conf \
+ && sed -i 's|/modules/ngx_http_image_filter_module.so|/usr/lib/nginx/modules/ngx_http_image_filter_module.so|' /etc/nginx/modules-enabled/*.conf \
+ && sed -i 's|/modules/ngx_http_js_module.so|/usr/lib/nginx/modules/ngx_http_js_module.so|' /etc/nginx/modules-enabled/*.conf
 
 # Set working directory
 WORKDIR /ragemp

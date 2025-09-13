@@ -20,6 +20,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tar \
     && rm -rf /var/lib/apt/lists/*
 
+# Remove default Nginx site to avoid conflicts
+RUN rm -f /etc/nginx/sites-enabled/default
+
 # Patch Nginx module .conf files to correct Debian paths
 RUN for f in /etc/nginx/modules-enabled/*.conf; do \
         sed -i 's|modules/|/usr/lib/nginx/modules/|g' "$f"; \

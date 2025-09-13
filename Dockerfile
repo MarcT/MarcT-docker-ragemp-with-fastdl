@@ -39,7 +39,9 @@ WORKDIR /ragemp
 # Download and extract RageMP server
 RUN wget https://cdn.rage.mp/updater/prerelease/server-files/linux_x64.tar.gz && \
     tar -xvf linux_x64.tar.gz && \
-    rm linux_x64.tar.gz
+    rm linux_x64.tar.gz && \
+    # Fix ownership to root
+    chown -R root:root ./ragemp-srv
 
 # Copy scripts
 COPY start.sh ./ragemp-srv/

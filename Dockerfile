@@ -7,7 +7,7 @@ EXPOSE 20005
 EXPOSE 22005/udp
 EXPOSE 22006
 
-# Install Nginx extras and dependencies
+# Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx-extras \
     wget \
@@ -21,15 +21,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tar \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory for RageMP
+# Set working directory
 WORKDIR /ragemp
 
-# Download and extract RageMP server files
+# Download and extract RageMP server
 RUN wget https://cdn.rage.mp/updater/prerelease/server-files/linux_x64.tar.gz && \
     tar -xvf linux_x64.tar.gz && \
     rm linux_x64.tar.gz
 
-# Copy scripts
+# Copy scripts into the extracted server folder
 COPY start.sh ./ragemp-srv/
 COPY config-generator.pl ./
 
